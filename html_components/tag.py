@@ -2,16 +2,19 @@ import re
 
 
 class TagEditor:
-    main_tag_pattern = r'(<{0}>((?:.|\n)*?)</{0}>)'
+    main_tag_pattern = r'(<{0}>?((?:.|\n)*?)</{0}>)'
     js_script_tag_pattern = r'(<script src=\"(.+)\".+/script>)'
     css_pattern = r'(<link.*?(?:href=|url|import).*[\'\"]([^(http:)].*css)[\'\"]>)'
+    _main_tags_allowed = ['head', 'body', 'html', 'nav', 'footer']
+    nav_tag = r''
 
     def __init__(self, text: str):
         self._text = text
 
-    def get_main_tag_content(self, tag):
+    def get_main_tag_content(self, tag: str, include_tags=False):
+        assert tag.lower() in self._main_tags_allowed, f'Only {", ".join(self._main_tags_allowed)} tags are allowed'
         pattern = self.main_tag_pattern.format(tag)
-        return re.search(pattern, self._text).group(0)
+        return re.search(pattern, self._text).group(1 if include_tags else 2)
 
     def get_script_tags(self, only_src=True):
         return self._get_tags(self.js_script_tag_pattern, only_src)

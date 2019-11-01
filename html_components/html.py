@@ -11,6 +11,8 @@ class Html:
         self.dir_path = Path(html_file_path)
         self.html_content = self._read_html()
         self.tag_editor = TagEditor(self.html_content)
+        self.head = self.get_headers()
+        self.body = self.get_body()
 
     def _read_html(self) -> str:
         """
@@ -20,7 +22,10 @@ class Html:
         return self.dir_path.read_text()
 
     def get_headers(self) -> Header:
-        return Header(self.tag_editor.get_main_tag_content('head'))
+        return Header(self.tag_editor.get_main_tag_content('head', include_tags=False))
 
     def get_body(self) -> Body:
-        return Body(self.tag_editor.get_main_tag_content('body'))
+        return Body(self.tag_editor.get_main_tag_content('body', include_tags=False))
+
+    def __repr__(self):
+        return self.head.__repr__() + self.body.__repr__()

@@ -7,8 +7,12 @@ class Body:
     footer: str = ''
     nav: str = ''
 
-    def __init__(self, html_text, common_scripts):
-        self.common_scripts = common_scripts
+    def __init__(self, html_text, common_scripts=None):
+        if common_scripts is None:
+            self.common_scripts = ['']
+        else:
+            assert isinstance(common_scripts, list), f'common_scripts argument type {type(common_scripts)} ' \
+                                                       f'is not list.'
         self.body = html_text
         self.tag_editor = TagEditor(html_text)
         self.set_body_attribs()
@@ -19,10 +23,10 @@ class Body:
         self.set_scripts()
 
     def set_nav(self):
-        self.nav = self.tag_editor.get_main_tag_content('nav')
+        self.nav = self.tag_editor.get_main_tag_content('nav', include_tags=True)
 
     def set_footer(self):
-        self.footer = self.tag_editor.get_main_tag_content('footer')
+        self.footer = self.tag_editor.get_main_tag_content('footer', include_tags=True)
 
     def set_scripts(self):
         self.scripts = self.tag_editor.get_script_tags()
@@ -32,7 +36,7 @@ class Body:
         self._replace_footer()
         self._replace_scripts()
         return (block_wrapper(self._get_replaced_html(), 'content')
-                + block_wrapper(self._get_unique_scripts_block(), 'extra_js'))
+                + self._get_unique_scripts_block())
 
     def _replace_scripts(self):
         self.tag_editor.replace_script_tags()
@@ -44,7 +48,7 @@ class Body:
         self.tag_editor.replace_main_tag('footer', "{% include 'footer.html' %}")
 
     def _get_unique_scripts_block(self):
-        return '\n'.join(self._get_unique_scripts())
+        return block_wrapper('\n'.join(self._get_unique_scripts()), 'extra_js')
 
     def _get_unique_scripts(self):
         return ["""<script src="{{% static '{0}' %}}"></script>""".format(script)
@@ -52,3 +56,6 @@ class Body:
 
     def _get_replaced_html(self):
         return self.tag_editor.get_text()
+
+    def __repr__(self):
+        return self.get_block_content()
