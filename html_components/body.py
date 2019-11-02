@@ -1,21 +1,23 @@
 from .tag import TagEditor
-from .utils import block_wrapper
+from .utils import block_wrapper, static_script_src_convertor
 
 
 class Body:
     scripts: list = []
     footer: str = ''
     nav: str = ''
+    common_scripts: list = []
 
-    def __init__(self, html_text, common_scripts=None):
-        if common_scripts is None:
-            self.common_scripts = ['']
-        else:
-            assert isinstance(common_scripts, list), f'common_scripts argument type {type(common_scripts)} ' \
-                                                       f'is not list.'
+    def __init__(self, html_text):
         self.body = html_text
         self.tag_editor = TagEditor(html_text)
         self.set_body_attribs()
+
+    def set_common_scripts(self, common_scripts):
+        assert isinstance(common_scripts, list), f'common_css_hrefs argument type {type(common_scripts)} ' \
+                                                 f'is not list.'
+        if common_scripts is not None:
+            self.common_scripts = common_scripts
 
     def set_body_attribs(self):
         self.set_nav()
@@ -48,11 +50,11 @@ class Body:
         self.tag_editor.replace_main_tag('footer', "{% include 'footer.html' %}")
 
     def _get_unique_scripts_block(self):
-        return block_wrapper('\n'.join(self._get_unique_scripts()), 'extra_js')
+        return block_wrapper(self._get_unique_scripts(), 'extra_js')
 
     def _get_unique_scripts(self):
-        return ["""<script src="{{% static '{0}' %}}"></script>""".format(script)
-                for script in self.scripts if script not in self.common_scripts]
+        uncommon_scripts = [src for src in self.scripts if src not in self.common_scripts]
+        return static_script_src_convertor(uncommon_scripts)
 
     def _get_replaced_html(self):
         return self.tag_editor.get_text()
